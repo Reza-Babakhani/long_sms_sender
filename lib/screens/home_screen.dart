@@ -12,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _message = "";
 
+  TextEditingController _textController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 AutoDirection(
                   text: _message,
                   child: TextField(
-                    controller: TextEditingController(text: _message),
+                    controller: _textController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       setState(() {
                         _message = "";
+                        _textController.clear();
                       });
                     },
                     child: const Text("Clear"))
@@ -64,11 +67,12 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           child: const RotationTransition(
             turns: AlwaysStoppedAnimation(0.9),
-            child: Icon(Icons.send),
+            child: Icon(
+              Icons.send,
+            ),
           ),
         ),
       ),
     );
   }
-
 }
