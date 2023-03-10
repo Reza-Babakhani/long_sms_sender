@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:long_sms_sender/utils/text_util.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ContactListScreen extends StatefulWidget {
   static const String routeName = "contacts";
@@ -16,6 +18,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
   bool _isInit = true;
   List<Contact>? _contacts;
   List<Contact> _selectedContacts = [];
+  String _search = "";
   TextEditingController _textController = TextEditingController();
   @override
   void didChangeDependencies() {
@@ -28,20 +31,47 @@ class _ContactListScreenState extends State<ContactListScreen> {
     super.didChangeDependencies();
   }
 
-  void _sendSMS() async {
-    print("sending.....");
-    var msgs = TextUtil.SplitEveryNth(_message, 160);
-    print(msgs);
-    print(_message);
-    for (String? m in msgs) {
-      String _result = await sendSMS(
-              message: m!,
-              recipients:
-                  _selectedContacts.map((e) => e.phones.first.number).toList())
-          .catchError((onError) {
-        print(onError);
-      });
-      print(_result);
+  Future _sendSMS() async {
+    if (await Permission.sms.isPermanentlyDenied) {
+      if (context.mounted) {
+        await showDialog(
+            context: context,
+            builder: (ctx) {
+              return const AlertDialog(
+                content: Text(
+                    "Please activate the permission to send SMS from the settings."),
+              );
+            });
+        openAppSettings();
+      }
+    }
+
+    if (await Permission.sms.request().isGranted) {
+      var msgs = TextUtil.splitEveryNth(_message, 159);
+      var msgCount = TextUtil.countSequence(_message, 159);
+      int successCount = 0;
+      for (String? m in msgs) {
+        var result = await sendSMS(
+            message: m!,
+            recipients:
+                _selectedContacts.map((e) => e.phones.first.number).toList(),
+            sendDirect: true);
+
+        if (result == "SMS Sent!") {
+          successCount++;
+        }
+      }
+
+      if (successCount == msgCount) {
+        Fluttertoast.showToast(
+            msg: "$successCount/$msgCount SMS sent successfully",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.black87,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
     }
   }
 
@@ -53,8 +83,21 @@ class _ContactListScreenState extends State<ContactListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.send),
-            onPressed: () {
-              _sendSMS();
+            onPressed: () async {
+              if (_selectedContacts.isEmpty) {
+                Fluttertoast.showToast(
+                    msg: "Please select at least one contact.",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.CENTER,
+                    timeInSecForIosWeb: 1,
+                    backgroundColor: Colors.black87,
+                    textColor: Colors.white,
+                    fontSize: 16.0);
+              } else {
+                await _sendSMS().then((value) {
+                  Navigator.of(context).pop();
+                });
+              }
             },
           )
         ],
@@ -77,21 +120,39 @@ class _ContactListScreenState extends State<ContactListScreen> {
                 ),
                 Expanded(
                   child: TextField(
-                    keyboardType: TextInputType.phone,
+                    //keyboardType: TextInputType.phone,
                     controller: _textController,
                     decoration: const InputDecoration(
-                        border: InputBorder.none, hintText: "Number..."),
+                        border: InputBorder.none,
+                        hintText: "Search Contact or Add Number..."),
+                    onChanged: (value) {
+                      setState(() {
+                        _search = value.toLowerCase();
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(
                   width: 5,
                 ),
                 IconButton(
-                  onPressed: () {
-                    selectContact(Contact(
-                        displayName: _textController.text,
-                        phones: [Phone(_textController.text)]));
-                    _textController.clear();
+                  onPressed: () async {
+                    if (TextUtil.phoneNumberValidate(_textController.text)) {
+                      selectContact(Contact(
+                          displayName: _textController.text,
+                          phones: [Phone(_textController.text)]));
+                      _textController.clear();
+                    } else {
+                      Fluttertoast.showToast(
+                          msg:
+                              "To add a contact manually, a valid phone number must be entered.",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                          timeInSecForIosWeb: 1,
+                          backgroundColor: Colors.black87,
+                          textColor: Colors.white,
+                          fontSize: 16.0);
+                    }
                   },
                   icon: const Icon(Icons.add_circle_outline_sharp),
                 )
@@ -145,7 +206,18 @@ class _ContactListScreenState extends State<ContactListScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else {
-                  _contacts = snapshot.data;
+                  if (_search.isEmpty) {
+                    _contacts = snapshot.data;
+                  } else {
+                    _contacts = snapshot.data!.where((element) {
+                      var nameIgnoreCase = element.displayName.toLowerCase();
+                      var phones = element.phones
+                          .map((p) => p.number.replaceAll(" ", ""))
+                          .toList();
+                      return nameIgnoreCase.contains(_search) ||
+                          phones.any((phone) => phone.contains(_search));
+                    }).toList();
+                  }
 
                   return Expanded(
                     child: ListView.builder(
