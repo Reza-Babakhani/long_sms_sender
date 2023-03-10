@@ -54,8 +54,8 @@ class _ContactListScreenState extends State<ContactListScreen> {
             context: context,
             builder: (ctx) {
               return const AlertDialog(
-                content: Text(
-                    "Please activate the permission to send SMS from the settings."),
+                content:
+                    Text("لطفاً مجوز ارسال پیامک را از تنظیمات فعال کنید."),
               );
             });
         openAppSettings();
@@ -80,7 +80,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
 
       if (successCount == msgCount) {
         Fluttertoast.showToast(
-            msg: "$successCount/$msgCount SMS sent successfully",
+            msg: "$successCount/$msgCount پیامک با موفقیت ارسال شد",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.CENTER,
             timeInSecForIosWeb: 1,
@@ -93,179 +93,182 @@ class _ContactListScreenState extends State<ContactListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Send To..."),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () async {
-              if (_selectedContacts.isEmpty) {
-                Fluttertoast.showToast(
-                    msg: "Please select at least one contact.",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black87,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-              } else {
-                await _sendSMS().then((value) async {
-                  if (_selectedContacts.length == 1) {
-                    Uri sms = Uri.parse(
-                        'sms:${_selectedContacts.first.phones.first.number}');
-                    if (await launchUrl(sms)) {
-                      //app opened
-                    } else {
-                      //app is not opened
-                    }
-                  }
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                });
-              }
-            },
-          )
-        ],
-      ),
-      body: SafeArea(
-          child: Container(
-        padding:
-            const EdgeInsets.only(left: 15, right: 15, bottom: 50, top: 15),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(width: 1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(children: [
-                const SizedBox(
-                  width: 5,
-                ),
-                Expanded(
-                  child: TextField(
-                    //keyboardType: TextInputType.phone,
-                    controller: _textController,
-                    decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Search Contact or Add Number..."),
-                    onChanged: (value) {
-                      setState(() {
-                        _search = value.toLowerCase();
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(
-                  width: 5,
-                ),
-                IconButton(
-                  onPressed: () async {
-                    if (TextUtil.phoneNumberValidate(_textController.text)) {
-                      selectContact(Contact(
-                          displayName: _textController.text,
-                          phones: [Phone(_textController.text)]));
-                      _textController.clear();
-                    } else {
-                      Fluttertoast.showToast(
-                          msg:
-                              "To add a contact manually, a valid phone number must be entered.",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.CENTER,
-                          timeInSecForIosWeb: 1,
-                          backgroundColor: Colors.black87,
-                          textColor: Colors.white,
-                          fontSize: 16.0);
-                    }
-                  },
-                  icon: const Icon(Icons.add_circle_outline_sharp),
-                )
-              ]),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: SingleChildScrollView(
-                child: Wrap(
-                    alignment: WrapAlignment.start,
-                    crossAxisAlignment: WrapCrossAlignment.start,
-                    runAlignment: WrapAlignment.start,
-                    children: [
-                      ..._selectedContacts.map((c) {
-                        return Container(
-                            padding: const EdgeInsets.all(5),
-                            margin: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(width: 1)),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(c.displayName),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    removeSelectedContact(c);
-                                  },
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline_sharp,
-                                  ),
-                                  color: Colors.red,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                )
-                              ],
-                            ));
-                      })
-                    ]),
-              ),
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            FutureBuilder<List<Contact>>(
-              future: FlutterContacts.getContacts(withProperties: true),
-              builder: (ctx, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("ارسال به..."),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.send),
+              onPressed: () async {
+                if (_selectedContacts.isEmpty) {
+                  Fluttertoast.showToast(
+                      msg: "لطفا حداقل یک مخاطب را انتخاب کنید.",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: Colors.black87,
+                      textColor: Colors.white,
+                      fontSize: 16.0);
                 } else {
-                  if (_search.isEmpty) {
-                    _contacts = snapshot.data;
-                  } else {
-                    _contacts = snapshot.data!.where((element) {
-                      var nameIgnoreCase = element.displayName.toLowerCase();
-                      var phones = element.phones
-                          .map((p) => p.number.replaceAll(" ", ""))
-                          .toList();
-                      return nameIgnoreCase.contains(_search) ||
-                          phones.any((phone) => phone.contains(_search));
-                    }).toList();
-                  }
-
-                  return Expanded(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _contacts!.length,
-                      //prototypeItem: ContactItem(_contacts!.first),
-                      cacheExtent: 30,
-                      addAutomaticKeepAlives: true,
-                      addRepaintBoundaries: true,
-                      addSemanticIndexes: true,
-                      itemBuilder: (ctx, i) {
-                        return ContactItem(_contacts![i], selectContact);
-                      },
-                    ),
-                  );
+                  await _sendSMS().then((value) async {
+                    if (_selectedContacts.length == 1) {
+                      Uri sms = Uri.parse(
+                          'sms:${_selectedContacts.first.phones.first.number}');
+                      if (await launchUrl(sms)) {
+                        //app opened
+                      } else {
+                        //app is not opened
+                      }
+                    }
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  });
                 }
               },
-            ),
+            )
           ],
         ),
-      )),
+        body: SafeArea(
+            child: Container(
+          padding:
+              const EdgeInsets.only(left: 15, right: 15, bottom: 50, top: 15),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(children: [
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Expanded(
+                    child: TextField(
+                      //keyboardType: TextInputType.phone,
+                      controller: _textController,
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "جستجو یا ورود شماره تلفن..."),
+                      onChanged: (value) {
+                        setState(() {
+                          _search = value.toLowerCase();
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      if (TextUtil.phoneNumberValidate(_textController.text)) {
+                        selectContact(Contact(
+                            displayName: _textController.text,
+                            phones: [Phone(_textController.text)]));
+                        _textController.clear();
+                      } else {
+                        Fluttertoast.showToast(
+                            msg:
+                                "برای افزودن یک مخاطب به صورت دستی، باید یک شماره تلفن معتبر وارد کنید.",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.CENTER,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.black87,
+                            textColor: Colors.white,
+                            fontSize: 16.0);
+                      }
+                    },
+                    icon: const Icon(Icons.add_circle_outline_sharp),
+                  )
+                ]),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  child: Wrap(
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      runAlignment: WrapAlignment.start,
+                      children: [
+                        ..._selectedContacts.map((c) {
+                          return Container(
+                              padding: const EdgeInsets.all(5),
+                              margin: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(width: 1)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(c.displayName),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      removeSelectedContact(c);
+                                    },
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline_sharp,
+                                    ),
+                                    color: Colors.red,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  )
+                                ],
+                              ));
+                        })
+                      ]),
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              FutureBuilder<List<Contact>>(
+                future: FlutterContacts.getContacts(withProperties: true),
+                builder: (ctx, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    if (_search.isEmpty) {
+                      _contacts = snapshot.data;
+                    } else {
+                      _contacts = snapshot.data!.where((element) {
+                        var nameIgnoreCase = element.displayName.toLowerCase();
+                        var phones = element.phones
+                            .map((p) => p.number.replaceAll(" ", ""))
+                            .toList();
+                        return nameIgnoreCase.contains(_search) ||
+                            phones.any((phone) => phone.contains(_search));
+                      }).toList();
+                    }
+
+                    return Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _contacts!.length,
+                        //prototypeItem: ContactItem(_contacts!.first),
+                        cacheExtent: 30,
+                        addAutomaticKeepAlives: true,
+                        addRepaintBoundaries: true,
+                        addSemanticIndexes: true,
+                        itemBuilder: (ctx, i) {
+                          return ContactItem(_contacts![i], selectContact);
+                        },
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        )),
+      ),
     );
   }
 
@@ -303,6 +306,8 @@ class ContactItem extends StatelessWidget {
         c.phones.map((e) {
           return e.number;
         }).join("\n"),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.end,
       ),
       trailing: IconButton(
           icon: const Icon(Icons.add),

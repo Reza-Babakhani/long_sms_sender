@@ -54,10 +54,8 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Send long sms',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.grey,
-      ),
-      home: HomeScreen(),
+      theme: ThemeData(primarySwatch: Colors.grey, fontFamily: "Vazir"),
+      home: const HomeScreen(),
       routes: {
         ContactListScreen.routeName: (ctx) => const ContactListScreen(),
       },

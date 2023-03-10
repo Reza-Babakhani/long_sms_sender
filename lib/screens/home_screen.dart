@@ -5,7 +5,7 @@ import 'package:long_sms_sender/screens/contact_list_screen.dart';
 import 'package:long_sms_sender/utils/text_util.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({super.key});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,51 +20,57 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Send Long SMS"),
+        title: const Text(
+          "ارسال پیامک طولانی",
+        ),
+        centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: [
-                AutoDirection(
-                  text: _message,
-                  child: TextField(
-                    controller: _textController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  AutoDirection(
+                    text: _message,
+                    child: TextField(
+                      controller: _textController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(15),
+                          ),
                         ),
                       ),
+                      maxLines: 10,
+                      onChanged: (val) {
+                        setState(() {
+                          _message = val;
+                          _parts =
+                              TextUtil.countSequence(_textController.text, 159);
+                        });
+                      },
                     ),
-                    maxLines: 10,
-                    onChanged: (val) {
-                      setState(() {
-                        _message = val;
-                        _parts =
-                            TextUtil.countSequence(_textController.text, 159);
-                      });
-                    },
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(child: Text("$_parts SMS to send")),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          _clearText();
-                        },
-                        child: const Text("Clear"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(child: Text("$_parts پیامک برای ارسال")),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            _clearText();
+                          },
+                          child: const Text("پاک کردن"),
+                        ),
                       ),
-                    ),
-                    Expanded(child: Container()),
-                  ],
-                )
-              ],
+                      Expanded(child: Container()),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -81,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             } else {
               Fluttertoast.showToast(
-                  msg: "Please write your message!",
+                  msg: "لطفا پیام خود را بنویسید!",
                   toastLength: Toast.LENGTH_SHORT,
                   gravity: ToastGravity.CENTER,
                   timeInSecForIosWeb: 1,
