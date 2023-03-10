@@ -4,6 +4,8 @@ import 'package:flutter_sms/flutter_sms.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:long_sms_sender/utils/text_util.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tapsell_plus/tapsell_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactListScreen extends StatefulWidget {
   static const String routeName = "contacts";
@@ -17,13 +19,27 @@ class _ContactListScreenState extends State<ContactListScreen> {
   String _message = "";
   bool _isInit = true;
   List<Contact>? _contacts;
-  List<Contact> _selectedContacts = [];
+  final List<Contact> _selectedContacts = [];
   String _search = "";
-  TextEditingController _textController = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
+
+  Future<void> ad() async {
+    String adId = await TapsellPlus.instance
+        .requestInterstitialAd("640af8a6972aed14bd5e31c5");
+
+    await TapsellPlus.instance.showInterstitialAd(adId, onOpened: (map) {
+      // Ad opened
+    }, onError: (map) {
+      // Error when showing ad
+    });
+  }
+
   @override
-  void didChangeDependencies() {
+  void didChangeDependencies() async {
     if (_isInit) {
       _message = ModalRoute.of(context)!.settings.arguments as String;
+
+      await ad();
 
       _isInit = false;
     }
@@ -94,8 +110,19 @@ class _ContactListScreenState extends State<ContactListScreen> {
                     textColor: Colors.white,
                     fontSize: 16.0);
               } else {
-                await _sendSMS().then((value) {
-                  Navigator.of(context).pop();
+                await _sendSMS().then((value) async {
+                  if (_selectedContacts.length == 1) {
+                    Uri sms = Uri.parse(
+                        'sms:${_selectedContacts.first.phones.first.number}');
+                    if (await launchUrl(sms)) {
+                      //app opened
+                    } else {
+                      //app is not opened
+                    }
+                  }
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
                 });
               }
             },
