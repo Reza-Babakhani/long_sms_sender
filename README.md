@@ -2,7 +2,7 @@
 
 ارسال پیامک طولانی و بخش بندی پیام به چند قسمت کوچک تر برای ارسال، یک کار آزار دهنده است. این برنامه این کار را برای شما آسان می‌کند.
 
-[Download From CafeBazaar](https://cafebazaar.ir/app/ir.rezababakhani.longsms)
+[دانلود از کافه بازار](https://cafebazaar.ir/app/ir.rezababakhani.longsms)
 
 
 
