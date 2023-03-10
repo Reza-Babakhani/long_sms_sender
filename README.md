@@ -1,16 +1,12 @@
-# long_sms_sender
+# ارسال راحت اس‌ام‌اس طولانی
 
-A new Flutter project.
+ارسال پیامک طولانی و بخش بندی پیام به چند قسمت کوچک تر برای ارسال، یک کار آزار دهنده است. این برنامه این کار را برای شما آسان می‌کند.
 
-## Getting Started
+[Download From CafeBazaar](https://cafebazaar.ir/app/ir.rezababakhani.longsms)
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+<img align='left' src='ss/fa-1.jpg' width='200'>
+<img align='left' src='ss/fa-2.jpg'  width='200'>
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
