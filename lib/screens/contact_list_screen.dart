@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:long_sms_sender/utils/text_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tapsell_plus/tapsell_plus.dart';
@@ -18,6 +19,7 @@ class ContactListScreen extends StatefulWidget {
 class _ContactListScreenState extends State<ContactListScreen> {
   String _message = "";
   bool _isInit = true;
+  bool _hasContactPermission = false;
   List<Contact>? _contacts;
   final List<Contact> _selectedContacts = [];
   String _search = "";
@@ -39,7 +41,30 @@ class _ContactListScreenState extends State<ContactListScreen> {
     if (_isInit) {
       _message = ModalRoute.of(context)!.settings.arguments as String;
 
-      await ad();
+      bool result = await InternetConnectionChecker().hasConnection;
+      if (result == true) {
+        await ad();
+      }
+
+      if (await Permission.contacts.isPermanentlyDenied) {
+        if (context.mounted) {
+          await showDialog(
+              context: context,
+              builder: (ctx) {
+                return const AlertDialog(
+                  content: Text(
+                      "درصورتی که میخواهید از لیست مخاطبین استفاده کنید، باید مجوز دسترسی به مخاطبین را از تنظیمات تلفن فعال کنید."),
+                );
+              });
+          openAppSettings();
+        }
+      }
+
+      if (await Permission.contacts.request().isGranted) {
+        setState(() {
+          _hasContactPermission = true;
+        });
+      }
 
       _isInit = false;
     }
@@ -229,42 +254,55 @@ class _ContactListScreenState extends State<ContactListScreen> {
               const SizedBox(
                 height: 5,
               ),
-              FutureBuilder<List<Contact>>(
-                future: FlutterContacts.getContacts(withProperties: true),
-                builder: (ctx, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else {
-                    if (_search.isEmpty) {
-                      _contacts = snapshot.data;
+              if (_hasContactPermission)
+                FutureBuilder<List<Contact>>(
+                  future: FlutterContacts.getContacts(withProperties: true),
+                  builder: (ctx, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
                     } else {
-                      _contacts = snapshot.data!.where((element) {
-                        var nameIgnoreCase = element.displayName.toLowerCase();
-                        var phones = element.phones
-                            .map((p) => p.number.replaceAll(" ", ""))
-                            .toList();
-                        return nameIgnoreCase.contains(_search) ||
-                            phones.any((phone) => phone.contains(_search));
-                      }).toList();
-                    }
+                      if (_search.isEmpty) {
+                        _contacts = snapshot.data;
+                      } else {
+                        _contacts = snapshot.data!.where((element) {
+                          var nameIgnoreCase =
+                              element.displayName.toLowerCase();
+                          var phones = element.phones
+                              .map((p) => p.number.replaceAll(" ", ""))
+                              .toList();
+                          return nameIgnoreCase.contains(_search) ||
+                              phones.any((phone) => phone.contains(_search));
+                        }).toList();
+                      }
 
-                    return Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: _contacts!.length,
-                        //prototypeItem: ContactItem(_contacts!.first),
-                        cacheExtent: 30,
-                        addAutomaticKeepAlives: true,
-                        addRepaintBoundaries: true,
-                        addSemanticIndexes: true,
-                        itemBuilder: (ctx, i) {
-                          return ContactItem(_contacts![i], selectContact);
-                        },
-                      ),
-                    );
-                  }
-                },
-              ),
+                      return Expanded(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _contacts!.length,
+                          //prototypeItem: ContactItem(_contacts!.first),
+                          cacheExtent: 30,
+                          addAutomaticKeepAlives: true,
+                          addRepaintBoundaries: true,
+                          addSemanticIndexes: true,
+                          itemBuilder: (ctx, i) {
+                            return ContactItem(_contacts![i], selectContact);
+                          },
+                        ),
+                      );
+                    }
+                  },
+                ),
+              if (!_hasContactPermission)
+                TextButton(
+                  child: const Text("اجازه دسترسی به مخاطبین"),
+                  onPressed: () async {
+                    if (await Permission.contacts.request().isGranted) {
+                      setState(() {
+                        _hasContactPermission = true;
+                      });
+                    }
+                  },
+                )
             ],
           ),
         )),
